@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+
+ducky_keys = {'ESCAPE': 'KEY_LEFT_ESC', 'ESC': 'KEY_LEFT_ESC', 'SPACE': '\' \'', 'TAB': 'KEY_TAB', 'GUI': 'KEY_LEFT_GUI', 'WINDOWS': 'KEY_LEFT_GUI', 'COMMAND': 'KEY_LEFT_GUI', 'MENU': '229', 'APP': '229', 'ENTER': 'KEY_RETURN', 'RETURN': 'KEY_RETURN', 'UP': 'KEY_UP_ARROW', 'UPARROW': 'KEY_UP_ARROW', 'DOWN': 'KEY_DOWN_ARROW', 'DOWNARROW': 'KEY_DOWN_ARROW', 'LEFT': 'KEY_LEFT_ARROW', 'LEFTARROW': 'KEY_LEFT_ARROW', 'RIGHT': 'KEY_RIGHT_ARROW', 'RIGHTARROW': 'KEY_RIGHT_ARROW', 'CAPSLOCK': 'KEY_CAPS_LOCK', 'DELETE': 'KEY_DELETE', 'DEL': 'KEY_DELETE', 'PAGEUP': 'KEY_PAGE_UP', 'PAGEDOWN': 'KEY_PAGE_DOWN', 'PRINTSCREEN': '206', 'END': 'KEY_END', 'ALT': 'KEY_LEFT_ALT', 'LALT': 'KEY_LEFT_ALT', 'RALT': 'KEY_RIGHT_ALT', 'SHIFT': 'KEY_LEFT_SHIFT', 'LSHIFT': 'KEY_LEFT_SHIFT', 'RSHIFT': 'KEY_RIGHT_SHIFT', 'CTRL': 'KEY_LEFT_CTRL', 'LCTRL': 'KEY_LEFT_CTRL', 'RCTRL': 'KEY_RIGHT_CTRL', 'CONTROL': 'KEY_LEFT_CTRL', 'F1': 'KEY_F1', 'F2': 'KEY_F2', 'F3': 'KEY_F3', 'F4': 'KEY_F4', 'F5': 'KEY_F5', 'F6': 'KEY_F6', 'F7': 'KEY_F7', 'F8': 'KEY_F8', 'F9': 'KEY_F9', 'F10': 'KEY_F10', 'F11': 'KEY_F11', 'F12': 'KEY_F12', 'a': '\'a\'', 'b': '\'b\'', 'c': '\'c\'', 'd': '\'d\'', 'e': '\'e\'', 'f': '\'f\'', 'g': '\'g\'', 'h': '\'h\'', 'i': '\'i\'', 'j': '\'j\'', 'k': '\'k\'', 'l': '\'l\'', 'm': '\'m\'', 'n': '\'n\'', 'o': '\'o\'', 'p': '\'p\'', 'q': '\'q\'', 'r': '\'r\'', 's': '\'s\'', 't': '\'t\'', 'u': '\'u\'', 'v': '\'v\'', 'w': '\'w\'', 'x': '\'x\'', 'y': '\'y\'', 'z': '\'z\''}
+arduino_keys = {'KEY_END': 213, 'KEY_PAGE_DOWN': 214, 'KEY_ESC': 177, 'KEY_F18': 245, 'KEY_F19': 246, 'KEY_F16': 243, 'KEY_F17': 244, 'KEY_F14': 241, 'KEY_F15': 242, 'KEY_F12': 205, 'KEY_F13': 240, 'KEY_F10': 203, 'KEY_LEFT_ALT': 130, 'KEY_F4': 197, 'KEY_F5': 198, 'KEY_F6': 199, 'KEY_F7': 200, 'KEY_F1': 194, 'KEY_F2': 195, 'KEY_F3': 196, 'KEY_F8': 201, 'KEY_F9': 202, 'KEY_F24': 251, 'KEY_RIGHT_SHIFT': 133, 'KEY_RETURN': 176, 'KEY_DELETE': 212, 'KEY_DOWN_ARROW': 217, 'KEY_LEFT_ARROW': 216, 'KEY_F11': 204, 'KEY_LEFT_CTRL': 128, 'KEY_PAGE_UP': 211, 'KEY_RIGHT_ALT': 134, 'KEY_LEFT_SHIFT': 129, 'KEY_CAPS_LOCK': 193, 'KEY_RIGHT_CTRL': 132, 'KEY_BACKSPACE': 178, 'KEY_LEFT_GUI': 131, 'KEY_F23': 250, 'KEY_HOME': 210, 'KEY_F21': 248, 'KEY_F20': 247, 'KEY_UP_ARROW': 218, 'KEY_INSERT': 209, 'KEY_TAB': 179, 'KEY_RIGHT_ARROW': 215, 'KEY_RIGHT_GUI': 135, 'KEY_F22': 249}
+
+if len(sys.argv) < 2:
+	print('Enter in the DuckyScript file to compile as a command line argument')
+	print('Usage: encoder IN_FILE [OUT_FILE]')
+
+print('DuckyScript to BadArduino compiler')
+in_path = sys.argv[1]
+in_file = open(in_path, 'r')
+print('Loaded ' + in_path)
+
+out_path = os.path.splitext(in_path)[0] + '.bad'
+if len(sys.argv) > 2:
+	out_path = sys.argv[2]
+
+out_file = open(out_path, 'w')
+
+lines = in_file.readlines()
+for line in lines:
+	line = line[:-1] # Remove trailing newline
+	words = line.split(' ')
+	remain = line[line.find(' ')+1:] # Everything after the first word
+	# Single keypress
+	if line in ducky_keys:
+		key = arduino_keys[ducky_keys[line]]
+		out_file.write('WRITE\n')
+		out_file.write(str(key) + '\n')
+		out_file.write('END\n')
+	# Multiple keypresses
+	if words[0] in ducky_keys:
+		out_file.write('PRESS\n')
+		for w in words:
+			key = arduino_keys[ducky_keys[w]]
+			out_file.write(str(key) + '\n')
+		out_file.write('END\n')
+	# String
+	elif words[0] == 'STRING':
+		out_file.write('STRING\n')
+		out_file.write(remain + '\n')
+		out_file.write('END\n')
+	# Delay
+	elif words[0] == 'DELAY':
+		out_file.write('DELAY\n')
+		out_file.write(remain + '\n')
+		out_file.write('END\n')
+	# Default delay
+	elif words[0] == 'DEFAULTDELAY' or words[0] == 'DEFAULT_DELAY':
+		out_file.write('DEFAULT_DELAY\n')
+		out_file.write(remain + '\n')
+		out_file.write('END\n')
+	# Unknown
+	elif words[0] != 'REM':
+		print('Unknown command: ' + line)
+
+out_file.close()
+print('Compiled to ' + out_path)
